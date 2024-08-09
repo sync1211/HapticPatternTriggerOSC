@@ -72,7 +72,7 @@
             SenderPortInput.Size = new Size(96, 23);
             SenderPortInput.TabIndex = 11;
             SenderPortInput.ValidatingType = typeof(DateTime);
-            SenderPortInput.TextChanged += ServerPortInput_TextChanged;
+            SenderPortInput.TextChanged += SenderPortInput_TextChanged;
             // 
             // dataGridView1
             // 
@@ -149,6 +149,7 @@
             ReceiverPortInput.Size = new Size(85, 23);
             ReceiverPortInput.TabIndex = 11;
             ReceiverPortInput.ValidatingType = typeof(DateTime);
+            ReceiverPortInput.TextChanged += ServerPortInput_TextChanged;
             // 
             // label1
             // 

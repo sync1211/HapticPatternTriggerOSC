@@ -135,13 +135,13 @@ namespace Haptics_Presets_OSC
 
         private void ServerPortInput_TextChanged(object sender, EventArgs e)
         {
-            if (!int.TryParse(ReceiverPortInput.Text, out int serverPort))
+            if (!int.TryParse(ReceiverPortInput.Text, out int receiverPort))
             {
                 ReceiverPortInput.Text = connectionSettings.ReceiverPort.ToString();
                 return;
             }
 
-            connectionSettings.ReceiverPort = serverPort;
+            connectionSettings.ReceiverPort = receiverPort;
             SaveSettings();
         }
 
@@ -250,6 +250,18 @@ namespace Haptics_Presets_OSC
         {
             StopButton_Click(sender, e);
             bHapticsManager.Disconnect();
+        }
+
+        private void SenderPortInput_TextChanged(object sender, EventArgs e)
+        {
+            if (!int.TryParse(SenderPortInput.Text, out int senderPort))
+            {
+                SenderPortInput.Text = connectionSettings.SenderPort.ToString();
+                return;
+            }
+
+            connectionSettings.SenderPort = senderPort;
+            SaveSettings();
         }
     }
 }
