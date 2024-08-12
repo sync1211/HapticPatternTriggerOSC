@@ -8,7 +8,7 @@ namespace Haptics_Presets_OSC.Classes
         private const string ParameterBasePath = "/avatar/parameters/Haptics/Patterns/";
         public readonly Dictionary<string, HapticPattern> Patterns = [];
 
-        private Uri CreatePatternDirectory()
+        private static Uri CreatePatternDirectory()
         {
             Uri patternDirectoryPath = new(Path.Combine(Directory.GetCurrentDirectory(), PatternDirectory));
             if (!Directory.Exists(patternDirectoryPath.LocalPath))
@@ -89,22 +89,29 @@ namespace Haptics_Presets_OSC.Classes
             File.Copy(patternFile.LocalPath, patternPath);
 
             // Save pattern info
-            Patterns.Add(patternName, new HapticPattern(patternName, new Uri(patternPath), ParameterBasePath + patternName));
+            Patterns.Add(patternName, new HapticPattern(patternName, new Uri(patternPath), $"{ParameterBasePath}{patternName}"));
 
             SavePatterns();
         }
 
         public void RemovePattern(string patternName)
         {
-            if (!Patterns.ContainsKey(patternName))
+            if (!Patterns.TryGetValue(patternName, out HapticPattern? value))
             {
                 return;
             }
 
-            HapticPattern pattern = Patterns[patternName];
+            HapticPattern pattern = value;
             Patterns.Remove(patternName);
-
-            File.Delete(pattern.Path);
+            try
+            {
+                File.Delete(pattern.Path);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Unable to remove pattern: {e.Message}");
+                return;
+            }
 
             SavePatterns();
         }

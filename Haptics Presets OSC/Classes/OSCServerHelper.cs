@@ -2,10 +2,10 @@
 
 namespace Haptics_Presets_OSC.Classes
 {
-    public class OSCServerHelper: IDisposable
+    public class OSCServerHelper(ConnectionSettings connectionSettings) : IDisposable
     {
-        private readonly OscClient client;
-        private readonly OscServer server;
+        private readonly OscClient client = new(connectionSettings.TargetIP, connectionSettings.SenderPort);
+        private readonly OscServer server = new(connectionSettings.ReceiverPort);
         private bool disposed;
         public bool IsRunning
         {
@@ -17,12 +17,6 @@ namespace Haptics_Presets_OSC.Classes
 
         public EventHandler<OSCMessageEventArgs>? OnMessageReceived;
 
-        public OSCServerHelper(ConnectionSettings connectionSettings)
-        {
-            server = new OscServer(connectionSettings.ReceiverPort);
-            client = new OscClient(connectionSettings.TargetIP, connectionSettings.SenderPort);
-        }
-
         public void Start(IEnumerable<HapticPattern> patterns)
         {
             // Start the OSC server
@@ -30,15 +24,16 @@ namespace Haptics_Presets_OSC.Classes
             {
                 server.TryAddMethod(
                     pattern.Parameter,
-                    (OscMessageValues values) => 
-                    {
-                        OnMessageReceived?.Invoke(this, new OSCMessageEventArgs(pattern, values));
-                        client.Send(pattern.Parameter, false);
-                    }
+                    (OscMessageValues values) => OnMessageReceived?.Invoke(this, new OSCMessageEventArgs(pattern, values))
                 );
             }
 
             server.Start();
+        }
+
+        public void Send(HapticPattern pattern, bool value)
+        {
+            client.Send(pattern.Parameter, value);
         }
 
         protected virtual void Dispose(bool disposing)

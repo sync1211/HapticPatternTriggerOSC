@@ -1,6 +1,6 @@
 ﻿using bHapticsLib;
-using Haptics_Presets_OSC.Classes;
 using BuildSoft.OscCore;
+using Haptics_Presets_OSC.Classes;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -67,8 +67,6 @@ namespace Haptics_Presets_OSC
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None
             };
 
-
-
             if (dataGridView1.Columns["testColumn"] == null)
             {
                 dataGridView1.Columns.Insert(0, testButtonColumn);
@@ -121,18 +119,6 @@ namespace Haptics_Presets_OSC
             connectionSettings = settings;
         }
 
-        private void PortInput_TextChanged(object sender, EventArgs e)
-        {
-            if (!int.TryParse(SenderPortInput.Text, out int clientPort))
-            {
-                SenderPortInput.Text = connectionSettings.SenderPort.ToString();
-                return;
-            }
-
-            connectionSettings.SenderPort = clientPort;
-            SaveSettings();
-        }
-
         private void ServerPortInput_TextChanged(object sender, EventArgs e)
         {
             if (!int.TryParse(ReceiverPortInput.Text, out int receiverPort))
@@ -152,9 +138,17 @@ namespace Haptics_Presets_OSC
                 bHapticsManager.RegisterPatternFromFile(pattern.Name, pattern.Path);
             }
 
-            oscServer = new OSCServerHelper(connectionSettings);
-            oscServer.OnMessageReceived += HandleOSCMessageReceived;
-            oscServer.Start([.. manager.Patterns.Values]);
+            try
+            {
+                oscServer = new OSCServerHelper(connectionSettings);
+                oscServer.OnMessageReceived += HandleOSCMessageReceived;
+                oscServer.Start([.. manager.Patterns.Values]);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to start OSC server: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             RefreshButtons();
         }
 
@@ -201,11 +195,18 @@ namespace Haptics_Presets_OSC
             Classes.HapticPattern pattern = e.Pattern;
             OscMessageValues values = e.Values;
 
-            // Do something with the pattern and values
-            if (values.ReadBooleanElement(0))
+            if (oscServer == null)
             {
-                bHapticsManager.PlayRegistered(pattern.Name);
+                return;
             }
+
+            if (!values.ReadStringElement(0).Equals("true", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return;
+            }
+
+            bHapticsManager.PlayRegistered(pattern.Name);
+            oscServer.Send(pattern, false);
         }
 
         private void DataGridView1_CellContentClick(object? sender, DataGridViewCellEventArgs e)
@@ -215,7 +216,7 @@ namespace Haptics_Presets_OSC
                 return;
             }
 
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "deleteColumn")
+            if (dataGridView1.Columns[e.ColumnIndex].Name.Equals("deleteColumn", StringComparison.CurrentCultureIgnoreCase))
             {
                 if (oscServer?.IsRunning ?? false)
                 {
@@ -233,7 +234,7 @@ namespace Haptics_Presets_OSC
                 manager.RemovePattern(pattern.Name);
                 RefreshGrid();
             }
-            else if (dataGridView1.Columns[e.ColumnIndex].Name == "testColumn")
+            else if (dataGridView1.Columns[e.ColumnIndex].Name.Equals("testColumn", StringComparison.CurrentCultureIgnoreCase))
             {
                 if (!(oscServer?.IsRunning ?? false))
                 {
