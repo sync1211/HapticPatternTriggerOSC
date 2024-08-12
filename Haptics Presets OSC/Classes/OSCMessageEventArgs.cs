@@ -1,6 +1,4 @@
 ﻿using BuildSoft.OscCore;
-using System;
-using System.Linq;
 
 namespace Haptics_Presets_OSC.Classes
 {
